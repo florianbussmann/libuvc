@@ -16,11 +16,13 @@ set(libuvc_VERSION_MINOR 0)
 set(libuvc_VERSION_PATCH 5)
 set(libuvc_VERSION ${libuvc_VERSION_MAJOR}.${libuvc_VERSION_MINOR}.${libuvc_VERSION_PATCH})
 
-find_library(LIBUSB_LIBRARY_NAMES usb-1.0
+if(NOT WIN32)
+  find_library(LIBUSB_LIBRARY_NAMES usb-1.0
 	PATHS /opt/local/lib)
 
-find_path(LIBUSB_INCLUDE_DIR libusb-1.0/libusb.h
+  find_path(LIBUSB_INCLUDE_DIR libusb-1.0/libusb.h
 	PATHS /opt/local/include)
+endif()
 
 # Try to find JPEG using a module or pkg-config. If that doesn't work, search for the header.
 # find_package(jpeg QUIET)
@@ -74,7 +76,12 @@ if(JPEG_FOUND)
   target_link_libraries (uvc ${JPEG_LIBRARIES})
 endif(JPEG_FOUND)
 
-target_link_libraries(uvc ${LIBUSB_LIBRARY_NAMES})
+if(WIN32)
+  set_target_properties(uvc PROPERTIES COMPILE_FLAGS "-m32" LINK_FLAGS "-m32")
+  target_link_libraries(uvc -lusb-1.0 -lpthreadVC2)
+else()
+  target_link_libraries(uvc ${LIBUSB_LIBRARY_NAMES})
+endif(WIN32)
 
 #add_executable(test src/test.c)
 #target_link_libraries(test uvc ${LIBUSB_LIBRARY_NAMES} opencv_highgui
